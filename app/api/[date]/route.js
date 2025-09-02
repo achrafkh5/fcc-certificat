@@ -1,3 +1,4 @@
+
 import { NextResponse } from "next/server";
 
 export const config = {
@@ -11,9 +12,9 @@ export async function GET(request, { params }) {
   let time;
 
   if (!dateParam) {
-    // no param → current date
+    // no param → return current date
     time = new Date();
-  } else if (!isNaN(dateParam) && dateParam.trim() !== "") {
+  } else if (/^\d+$/.test(dateParam)) {
     // numeric timestamp
     time = new Date(Number(dateParam));
   } else if (!isNaN(Date.parse(dateParam))) {
@@ -24,9 +25,7 @@ export async function GET(request, { params }) {
       { error: "Invalid Date" },
       {
         status: 400,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-        },
+        headers: { "Access-Control-Allow-Origin": "*" },
       }
     );
   }
@@ -38,9 +37,7 @@ export async function GET(request, { params }) {
     },
     {
       status: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
+      headers: { "Access-Control-Allow-Origin": "*" },
     }
   );
 }
