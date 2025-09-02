@@ -1,4 +1,4 @@
-
+// app/api/[...date]/route.js
 import { NextResponse } from "next/server";
 
 export const config = {
@@ -8,17 +8,17 @@ export const config = {
 };
 
 export async function GET(request, { params }) {
-  const dateParam = params?.date; // undefined if not provided
+  const dateParam = params?.date?.[0]; // undefined if not provided
   let time;
 
   if (!dateParam) {
-    // no param → return current date
+    // No param → current date
     time = new Date();
   } else if (/^\d+$/.test(dateParam)) {
-    // numeric timestamp
+    // Numeric timestamp
     time = new Date(Number(dateParam));
   } else if (!isNaN(Date.parse(dateParam))) {
-    // valid date string
+    // Valid date string
     time = new Date(dateParam);
   } else {
     return NextResponse.json(
