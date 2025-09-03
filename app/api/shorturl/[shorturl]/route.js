@@ -41,7 +41,7 @@ export async function GET(request, { params }) {
         redirectUrl = `http://${redirectUrl}`;
       }
 
-      return NextResponse.redirect(redirectUrl, 307);
+      return NextResponse.redirect(redirectUrl, 302);
     } else {
       return NextResponse.json(
         { error: "No short URL found for the given input" },
