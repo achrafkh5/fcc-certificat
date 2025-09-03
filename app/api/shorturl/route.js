@@ -3,7 +3,11 @@ import { MongoClient } from "mongodb";
 
 let client;
 let db;
-
+export const config = {
+  api: {
+    externalResolver: true,
+  },
+};
 async function initDb() {
   if (!client) {
     client = new MongoClient(process.env.URI);
@@ -41,8 +45,3 @@ export async function POST(request) {
     );
   }
 }
-export const config = {
-  api: {
-    externalResolver: true,
-  },
-};
