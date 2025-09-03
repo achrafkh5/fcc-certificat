@@ -2,9 +2,7 @@ import { NextResponse } from "next/server";
 import { MongoClient } from "mongodb";
 
 export const config = {
-  api: {
-    externalResolver: true,
-  },
+  api: { externalResolver: true },
 };
 
 let client;
@@ -33,6 +31,7 @@ export async function GET(request, { params }) {
     const db = await initDb();
     const urlEntry = await db.collection("urls").findOne({ short_url: id });
 
+    // Defensive check
     if (!urlEntry?.original_url) {
       return NextResponse.json(
         { error: "No short URL found for the given input" },
@@ -42,17 +41,15 @@ export async function GET(request, { params }) {
 
     let redirectUrl = urlEntry.original_url;
 
-    // Ensure absolute URL
     if (!redirectUrl.startsWith("http://") && !redirectUrl.startsWith("https://")) {
       redirectUrl = `http://${redirectUrl}`;
     }
 
     return NextResponse.redirect(redirectUrl, 307);
-  } catch (error) {
+  } catch (err) {
     return NextResponse.json(
       { error: "Server Error" },
       { status: 500, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
 }
-
