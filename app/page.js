@@ -1,48 +1,26 @@
 "use client";
+import styles from "./page.module.css";
 import { useState } from "react";
-
 export default function Home() {
   const [url, setUrl] = useState("");
-  const [result, setResult] = useState(null);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch("/api/shorturl", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
-      });
-      const data = await res.json();
-      setResult(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   return (
-    <div>
-      <h1>URL Shortener Microservice</h1>
-      <form onSubmit={handleSubmit}>
+    <div className={styles.page}>
+      <h1 className={styles.title}>URL shortner Microservice</h1>
+      <form className={styles.form} method="POST" action="/api/shorturl">
         <input
+          className={styles.input}
           type="url"
-          placeholder="Enter URL"
+          name="url"
+          placeholder="Enter URL to shorten"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
         />
-        <button type="submit">Shorten</button>
+        <button className={styles.button} type="submit">
+          Shorten
+        </button>
       </form>
-      {result && (
-        <div>
-          {result.error ? (
-            <p>Error: {result.error}</p>
-          ) : (
-            <p>
-              Short URL: <a href={`/api/shorturl/${result.short_url}`}>{result.short_url}</a>
-            </p>
-          )}
-        </div>
-      )}
     </div>
   );
 }
