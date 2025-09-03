@@ -14,7 +14,7 @@ async function initDb() {
 }
 
 export async function GET(request, { params }) {
-  const id = Number(params.short_url);
+  const id = Number(params.shorturl);
 
   if (isNaN(id)) {
     return NextResponse.json(
