@@ -21,7 +21,7 @@ export async function GET(request, { params }) {
     const urlEntry = await db.collection("urls").findOne({ short_url: parseInt(shorturl) });
 
     if (urlEntry) {
-      const redirectUrl = urlEntry.original_url.startsWith("http")
+      const redirectUrl = urlEntry?.original_url?.startsWith("http")
         ? urlEntry.original_url
         : `http://${urlEntry.original_url}`;
 
