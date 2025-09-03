@@ -23,6 +23,13 @@ export async function POST(request) {
   const params = new URLSearchParams(body);
   let url = params.get("url");
 
+  if (!url) {
+    return NextResponse.json(
+      { error: "Invalid URL" },
+      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
+    );
+  }
+
   if (!/^https?:\/\//i.test(url)) {
     url = "http://" + url;
   }
