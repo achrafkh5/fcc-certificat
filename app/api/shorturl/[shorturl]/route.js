@@ -5,9 +5,7 @@ let client;
 let db;
 
 export const config = {
-  api: {
-    externalResolver: true,
-  },
+  api: { externalResolver: true },
 };
 
 async function initDb() {
@@ -21,37 +19,15 @@ async function initDb() {
 
 export async function GET(request, { params }) {
   const id = Number(params?.shorturl);
+  if (isNaN(id)) return NextResponse.json({ error: "Invalid short URL id" }, { status: 400 });
 
-  if (isNaN(id)) {
-    return NextResponse.json(
-      { error: "Invalid short URL id" },
-      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
-    );
-  }
+  const db = await initDb();
+  const urlEntry = await db.collection("urls").findOne({ short_url: id });
 
-  try {
-    const db = await initDb();
-    const urlEntry = await db.collection("urls").findOne({ short_url: id });
+  if (!urlEntry) return NextResponse.json({ error: "No short URL found for the given input" }, { status: 404 });
 
-    if (urlEntry) {
-      let redirectUrl = urlEntry.original_url;
+  let redirectUrl = urlEntry.original_url;
+  if (!/^https?:\/\//i.test(redirectUrl)) redirectUrl = `http://${redirectUrl}`;
 
-      // Ensure absolute URL
-      if (!redirectUrl.startsWith("http://") && !redirectUrl.startsWith("https://")) {
-        redirectUrl = `http://${redirectUrl}`;
-      }
-
-      return NextResponse.redirect(redirectUrl, 307);
-    } else {
-      return NextResponse.json(
-        { error: "No short URL found for the given input" },
-        { status: 404, headers: { "Access-Control-Allow-Origin": "*" } }
-      );
-    }
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Server Error" },
-      { status: 500, headers: { "Access-Control-Allow-Origin": "*" } }
-    );
-  }
+  return NextResponse.redirect(redirectUrl, 307);
 }
