@@ -25,7 +25,7 @@ export async function POST(request) {
 
   if (!url) {
     return NextResponse.json(
-      { error: "Invalid URL" },
+      { error: "invalid url" },
       { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
@@ -52,7 +52,7 @@ export async function POST(request) {
     );
   } catch (error) {
     return NextResponse.json(
-      { error: "Invalid URL" ,errorDetails: error.message},
+      { error: "invalid url" ,errorDetails: error.message},
       { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
