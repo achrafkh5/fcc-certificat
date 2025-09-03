@@ -18,7 +18,7 @@ export async function GET(request, { params }) {
 
   if (isNaN(id)) {
     return NextResponse.json(
-      { error: "invalid url" },
+      { error: "No short URL found for the given input" },
       { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
@@ -28,10 +28,10 @@ export async function GET(request, { params }) {
 
   if (!urlEntry) {
     return NextResponse.json(
-      { error: "invalid url" },
+      { error: "No short URL found for the given input" },
       { status: 404, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
-  
+
   return NextResponse.redirect(urlEntry.original_url, 302);
 }
