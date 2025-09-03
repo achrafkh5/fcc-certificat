@@ -21,9 +21,10 @@ export async function GET(request, { params }) {
     const urlEntry = await db.collection("urls").findOne({ short_url: parseInt(shorturl) });
 
     if (urlEntry) {
-      const redirectUrl = urlEntry?.original_url?.startsWith("http")
-        ? urlEntry.original_url
-        : `http://${urlEntry.original_url}`;
+      const original = urlEntry?.original_url ?? "";
+const redirectUrl = original.startsWith("http")
+  ? original
+  : `http://${original}`;
 
       return NextResponse.redirect(redirectUrl, 307);
     } else {
