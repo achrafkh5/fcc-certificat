@@ -33,21 +33,21 @@ export async function GET(request, { params }) {
     const db = await initDb();
     const urlEntry = await db.collection("urls").findOne({ short_url: id });
 
-    if (urlEntry) {
-      let redirectUrl = urlEntry.original_url;
-
-      // Ensure absolute URL
-      if (!redirectUrl.startsWith("http://") && !redirectUrl.startsWith("https://")) {
-        redirectUrl = `http://${redirectUrl}`;
-      }
-
-      return NextResponse.redirect(redirectUrl, 307);
-    } else {
+    if (!urlEntry?.original_url) {
       return NextResponse.json(
         { error: "No short URL found for the given input" },
         { status: 404, headers: { "Access-Control-Allow-Origin": "*" } }
       );
     }
+
+    let redirectUrl = urlEntry.original_url;
+
+    // Ensure absolute URL
+    if (!redirectUrl.startsWith("http://") && !redirectUrl.startsWith("https://")) {
+      redirectUrl = `http://${redirectUrl}`;
+    }
+
+    return NextResponse.redirect(redirectUrl, 307);
   } catch (error) {
     return NextResponse.json(
       { error: "Server Error" },
@@ -55,3 +55,4 @@ export async function GET(request, { params }) {
     );
   }
 }
+
