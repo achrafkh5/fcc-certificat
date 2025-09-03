@@ -39,7 +39,8 @@ export async function GET(request, { params }) {
     );
   }
 
-  // Redirect using HTTP 302 (FCC requirement)
+  // Redirect with 302; headers can’t be sent with redirect
   return NextResponse.redirect(urlEntry.original_url, 302);
 }
+
 

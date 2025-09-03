@@ -30,9 +30,16 @@ export async function POST(request) {
     );
   }
 
+  if (!/^https?:\/\//i.test(url)) {
+    return NextResponse.json(
+      { error: "invalid url" },
+      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
+    );
+  }
+
   let validUrl;
   try {
-    validUrl = new URL(url); // strict validation
+    validUrl = new URL(url);
   } catch {
     return NextResponse.json(
       { error: "invalid url" },
@@ -41,8 +48,6 @@ export async function POST(request) {
   }
 
   const db = await initDb();
-
-  // Ensure short_url starts at 1 and increments
   const lastEntry = await db
     .collection("urls")
     .find()
