@@ -11,7 +11,7 @@ export default function Home() {
       <form className={styles.form} method="POST" action="/api/shorturl">
         <input
           className={styles.input}
-          type="url"
+          type="text"
           name="url"
           placeholder="Enter URL to shorten"
           value={url}
