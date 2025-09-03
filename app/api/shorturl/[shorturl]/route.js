@@ -21,12 +21,8 @@ export async function GET(request, { params }) {
     const urlEntry = await db.collection("urls").findOne({ short_url: parseInt(shorturl) });
 
     if (urlEntry) {
-      const original = urlEntry?.original_url ?? "";
-const redirectUrl = original.startsWith("http")
-  ? original
-  : `http://${original}`;
 
-      return NextResponse.redirect(redirectUrl, 307);
+      return NextResponse.redirect(urlEntry.original_url, 307);
     } else {
       return NextResponse.json(
         { error: "No short URL found for the given input" },
