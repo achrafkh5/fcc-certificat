@@ -11,7 +11,6 @@ if (!client) {
   client = new MongoClient(process.env.URI);
   await client.connect();
 }
-await client.connect();
 const db = client.db("testdb");
 
 export async function POST(request) {
