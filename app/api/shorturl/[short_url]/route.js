@@ -14,12 +14,12 @@ async function initDb() {
 }
 
 export async function GET(request, { params }) {
-  const id = Number(params?.shorturl);
+  const id = Number(params.short_url);
 
   if (isNaN(id)) {
     return NextResponse.json(
       { error: "No short URL found for the given input" },
-      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
+      { headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
 
@@ -29,7 +29,7 @@ export async function GET(request, { params }) {
   if (!urlEntry) {
     return NextResponse.json(
       { error: "No short URL found for the given input" },
-      { status: 404, headers: { "Access-Control-Allow-Origin": "*" } }
+      { headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
 
