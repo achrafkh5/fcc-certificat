@@ -8,39 +8,25 @@ export const config = {
 };
 
 let client;
-let db;
-
-async function initDb() {
-  if (!client) {
-    client = new MongoClient(process.env.URI);
-    await client.connect();
-    db = client.db("testdb");
-  }
-  return db;
+if (!client) {
+  client = new MongoClient(process.env.URI);
+  await client.connect();
 }
+const db = client.db("testdb");
 
 export async function GET(request, { params }) {
-  const id = Number(params?.shorturl);
-
-  if (isNaN(id)) {
-    return NextResponse.json(
-      { error: "Invalid short URL id" },
-      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
-    );
-  }
+  const shorturl = params?.shorturl; // from /api/shorturl/[shorturl]
 
   try {
-    const db = await initDb();
-    const urlEntry = await db.collection("urls").findOne({ short_url: id });
+    const urlEntry = await db.collection("urls").findOne({ short_url: parseInt(shorturl) });
 
     if (urlEntry) {
       let redirectUrl = urlEntry.original_url;
 
-      // Ensure absolute URL
-      if (!redirectUrl.startsWith("http://") && !redirectUrl.startsWith("https://")) {
-        redirectUrl = `http://${redirectUrl}`;
-      }
-
+  // If it doesn't start with http:// or https://, add http://
+  if (typeof redirectUrl === "string" && !redirectUrl.startsWith("http")) {
+    redirectUrl = `http://${redirectUrl}`;
+  }
       return NextResponse.redirect(redirectUrl, 307);
     } else {
       return NextResponse.json(
