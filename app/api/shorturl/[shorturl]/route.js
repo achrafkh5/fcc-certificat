@@ -21,12 +21,25 @@ async function initDb() {
 
 export async function GET(request, { params }) {
   const id = Number(params?.shorturl);
-  if (isNaN(id)) return NextResponse.json({ error: "invalid url" }, { status: 400 });
+
+  if (isNaN(id)) {
+    return NextResponse.json(
+      { error: "invalid url" },
+      { status: 400 }
+    );
+  }
 
   const db = await initDb();
   const urlEntry = await db.collection("urls").findOne({ short_url: id });
-  if (!urlEntry) return NextResponse.json({ error: "invalid url" }, { status: 404 });
 
-  return NextResponse.redirect(urlEntry.original_url, 302); // FCC expects 302
+  if (!urlEntry) {
+    return NextResponse.json(
+      { error: "invalid url" },
+      { status: 404 }
+    );
+  }
+
+  // Redirect using HTTP 302 (FCC requirement)
+  return NextResponse.redirect(urlEntry.original_url, 302);
 }
 
