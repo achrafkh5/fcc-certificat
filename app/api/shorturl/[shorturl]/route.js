@@ -25,7 +25,7 @@ export async function GET(request, { params }) {
   if (isNaN(id)) {
     return NextResponse.json(
       { error: "invalid url" },
-      { status: 400 }
+      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
 
@@ -35,7 +35,7 @@ export async function GET(request, { params }) {
   if (!urlEntry) {
     return NextResponse.json(
       { error: "invalid url" },
-      { status: 404 }
+      { status: 404, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
 

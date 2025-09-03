@@ -26,7 +26,7 @@ export async function POST(request) {
   if (!url) {
     return NextResponse.json(
       { error: "invalid url" },
-      { status: 400 }
+      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
 
@@ -36,7 +36,7 @@ export async function POST(request) {
   } catch {
     return NextResponse.json(
       { error: "invalid url" },
-      { status: 400 }
+      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
 
@@ -59,6 +59,6 @@ export async function POST(request) {
 
   return NextResponse.json(
     { original_url: validUrl.href, short_url: shortCode },
-    { status: 201 }
+    { status: 201, headers: { "Access-Control-Allow-Origin": "*" } }
   );
 }
