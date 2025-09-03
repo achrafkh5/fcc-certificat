@@ -25,7 +25,11 @@ export async function POST(request) {
   const url = params.get("url");
 
   try {
-    const validUrl = new URL(url); 
+    let normalizedUrl = url;
+if (!/^https?:\/\//i.test(url)) {
+  normalizedUrl = "https://" + url;
+}
+const validUrl = new URL(normalizedUrl); 
     const db = await initDb();
 
     const numberOfUrls = await db.collection("urls").countDocuments();
