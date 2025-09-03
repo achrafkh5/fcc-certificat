@@ -47,7 +47,7 @@ const validUrl = new URL(normalizedUrl);
   } catch (error) {
     console.error("Error processing URL:", error);
     return NextResponse.json(
-      { error: "Invalid URL" },
+      { error: "Invalid URL",errorDetails: error.message },
       { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
