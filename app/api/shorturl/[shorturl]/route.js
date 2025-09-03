@@ -4,12 +4,6 @@ import { MongoClient } from "mongodb";
 let client;
 let db;
 
-export const config = {
-  api: {
-    externalResolver: true,
-  },
-};
-
 async function initDb() {
   if (!client) {
     client = new MongoClient(process.env.URI);
@@ -38,9 +32,6 @@ export async function GET(request, { params }) {
       { status: 404, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
-
-  // Redirect with 302; headers can’t be sent with redirect
+  
   return NextResponse.redirect(urlEntry.original_url, 302);
 }
-
-
