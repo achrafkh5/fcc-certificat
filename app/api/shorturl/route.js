@@ -21,39 +21,33 @@ async function initDb() {
 export async function POST(request) {
   const body = await request.text();
   const params = new URLSearchParams(body);
-  let url = params.get("url");
+  const url = params.get("url");
 
   if (!url) {
-    return NextResponse.json(
-      { error: 'invalid url' },
-      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
-    );
+    return NextResponse.json({ error: "invalid url" },
+      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } });
   }
 
-  if (!/^https?:\/\//i.test(url)) {
-    url = "http://" + url;
-  }
-
+  let validUrl;
   try {
-    const validUrl = new URL(url); 
-    const db = await initDb();
+    validUrl = new URL(url); // throws if invalid
+  } catch {
+    return NextResponse.json({ error: "invalid url" }, 
+      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } });
+  }
 
-    const numberOfUrls = await db.collection("urls").countDocuments();
-    const shortCode = numberOfUrls + 1;
+  const db = await initDb();
 
-    await db.collection("urls").insertOne({
-      original_url: validUrl.href,
-      short_url: shortCode,
-    });
+  // Get next short code
+  const lastEntry = await db.collection("urls").find().sort({ short_url: -1 }).limit(1).toArray();
+  const shortCode = lastEntry.length ? lastEntry[0].short_url + 1 : 1;
 
-    return NextResponse.json(
-      { original_url: validUrl.href, short_url: shortCode },
+  await db.collection("urls").insertOne({
+    original_url: validUrl.href,
+    short_url: shortCode,
+  });
+
+  return NextResponse.json({ original_url: validUrl.href, short_url: shortCode },
       { status: 201, headers: { "Access-Control-Allow-Origin": "*" } }
     );
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'invalid url' },
-      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
-    );
-  }
 }

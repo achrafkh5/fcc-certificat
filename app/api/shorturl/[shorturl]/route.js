@@ -21,37 +21,12 @@ async function initDb() {
 
 export async function GET(request, { params }) {
   const id = Number(params?.shorturl);
+  if (isNaN(id)) return NextResponse.json({ error: "invalid url" }, { status: 400 });
 
-  if (isNaN(id)) {
-    return NextResponse.json(
-      { error: "Invalid short URL id" },
-      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
-    );
-  }
+  const db = await initDb();
+  const urlEntry = await db.collection("urls").findOne({ short_url: id });
+  if (!urlEntry) return NextResponse.json({ error: "invalid url" }, { status: 404 });
 
-  try {
-    const db = await initDb();
-    const urlEntry = await db.collection("urls").findOne({ short_url: id });
-
-    if (urlEntry) {
-      let redirectUrl = urlEntry.original_url;
-
-      // Ensure absolute URL
-      if (!redirectUrl.startsWith("http://") && !redirectUrl.startsWith("https://")) {
-        redirectUrl = `http://${redirectUrl}`;
-      }
-
-      return NextResponse.redirect(redirectUrl, 302);
-    } else {
-      return NextResponse.json(
-        { error: "No short URL found for the given input" },
-        { status: 404, headers: { "Access-Control-Allow-Origin": "*" } }
-      );
-    }
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Server Error" },
-      { status: 500, headers: { "Access-Control-Allow-Origin": "*" } }
-    );
-  }
+  return NextResponse.redirect(urlEntry.original_url, 302); // FCC expects 302
 }
+
