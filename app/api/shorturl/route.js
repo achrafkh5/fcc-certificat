@@ -1,14 +1,16 @@
-// app/api/shorturl/route.js
 import { NextResponse } from "next/server";
 import { MongoClient } from "mongodb";
+import dns from "dns/promises";
 
 let client;
 let db;
+
 export const config = {
   api: {
     externalResolver: true,
   },
 };
+
 async function initDb() {
   if (!client) {
     client = new MongoClient(process.env.URI);
@@ -24,30 +26,31 @@ export async function POST(request) {
   const url = params.get("url");
 
   if (!url) {
-    return NextResponse.json(
-      { error: "invalid url" },
-      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
-    );
+    return NextResponse.json({ error: "invalid url" }, { status: 400 });
   }
 
+  // Only allow URLs starting with http:// or https://
   if (!/^https?:\/\//i.test(url)) {
-    return NextResponse.json(
-      { error: "invalid url" },
-      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
-    );
+    return NextResponse.json({ error: "invalid url" }, { status: 400 });
   }
 
   let validUrl;
   try {
     validUrl = new URL(url);
   } catch {
-    return NextResponse.json(
-      { error: "invalid url" },
-      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
-    );
+    return NextResponse.json({ error: "invalid url" }, { status: 400 });
+  }
+
+  // Verify that hostname exists using DNS
+  try {
+    await dns.lookup(validUrl.hostname);
+  } catch {
+    return NextResponse.json({ error: "invalid url" }, { status: 400 });
   }
 
   const db = await initDb();
+
+  // Generate next short_url starting at 1
   const lastEntry = await db
     .collection("urls")
     .find()
