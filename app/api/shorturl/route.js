@@ -56,14 +56,9 @@ export async function POST(request) {
   const db = await initDb();
 
   // Get next short_url
-  const lastEntry = await db
-    .collection("urls")
-    .find()
-    .sort({ short_url: -1 })
-    .limit(1)
-    .toArray();
+  const count = await db.collection("urls").countDocuments();
+  const shortCode = count + 1;
 
-  const shortCode = lastEntry.length ? lastEntry[0].short_url + 1 : 1;
 
   await db.collection("urls").insertOne({
     original_url: validUrl.href,
