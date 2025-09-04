@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { MongoClient } from "mongodb";
-import dns from "dns/promises";
+import dns from "dns";
+import { promisify } from "util";
 
 let client;
 let db;
@@ -14,59 +15,56 @@ async function initDb() {
   return db;
 }
 
+const dnsLookup = promisify(dns.lookup);
+
 export async function POST(request) {
-  const body = await request.text();
-  const params = new URLSearchParams(body);
-  const url = params.get("url");
+  const body = await request.formData();
+  const url = body.get("url");
 
   if (!url) {
     return NextResponse.json(
       { error: "invalid url" },
-      { headers: { "Access-Control-Allow-Origin": "*" } }
+      { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } }
     );
   }
 
-  if (!/^https?:\/\//i.test(url)) {
-    return NextResponse.json(
-      { error: "invalid url" },
-      { headers: { "Access-Control-Allow-Origin": "*" } }
-    );
-  }
-
-  let validUrl;
+  let hostname;
   try {
-    validUrl = new URL(url);
+    hostname = new URL(url).hostname;
   } catch {
     return NextResponse.json(
       { error: "invalid url" },
-      { headers: { "Access-Control-Allow-Origin": "*" } }
+      { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } }
     );
   }
 
-  // Verify hostname exists
   try {
-    await dns.lookup(validUrl.hostname);
+    await dnsLookup(hostname);
   } catch {
     return NextResponse.json(
       { error: "invalid url" },
-      { headers: { "Access-Control-Allow-Origin": "*" } }
+      { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } }
     );
   }
 
   const db = await initDb();
 
-  // Get next short_url
-  const count = await db.collection("urls").countDocuments();
-  const shortCode = count + 1;
+  const lastEntry = await db
+    .collection("urls")
+    .find()
+    .sort({ short_url: -1 })
+    .limit(1)
+    .toArray();
 
+  const shortCode = lastEntry.length ? lastEntry[0].short_url + 1 : 1;
 
   await db.collection("urls").insertOne({
-    original_url: validUrl.href,
+    original_url: url,
     short_url: shortCode,
   });
 
   return NextResponse.json(
-    { original_url: validUrl.href, short_url: shortCode },
-    { headers: { "Access-Control-Allow-Origin": "*" } }
+    { original_url: url, short_url: shortCode },
+    { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } }
   );
 }
