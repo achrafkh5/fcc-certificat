@@ -42,7 +42,13 @@ export async function POST(request, { params }) {
     await db.collection("fccexercices").insertOne({ userId: new ObjectId(id), description, duration: Number(duration), date, username: user.userName });
     const getUser = await db.collection("fccusers").findOne({ _id: new ObjectId(id) });
     return NextResponse.json(
-      { username: getUser.userName, description, duration: Number(duration), date, _id: getUser._id },
+      {
+        username: user.username,
+        description,
+        duration: Number(duration),
+        date,
+        _id: user._id
+      },
       { headers: { "Access-Control-Allow-Origin": "*" } }
     );
   } catch {

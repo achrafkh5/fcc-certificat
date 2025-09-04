@@ -16,9 +16,9 @@ async function initDb() {
 export async function POST(request) {
   const body = await request.text();
   const params = new URLSearchParams(body);
-  const userName = params.get("username");
+  const username = params.get("username");
 
-    if (!userName) {
+    if (!username) {
     return NextResponse.json(
       { error: "you need to enter a username" },
       { headers: { "Access-Control-Allow-Origin": "*" } }
@@ -27,10 +27,10 @@ export async function POST(request) {
   
   try {
     const db = await initDb();
-    await db.collection("fccusers").insertOne({ userName });
-    const getUser = await db.collection("fccusers").findOne({ userName });
+    await db.collection("fccusers").insertOne({ username });
+    const getUser = await db.collection("fccusers").findOne({ username });
     return NextResponse.json(
-      { userName: getUser.userName, _id: getUser._id },
+      { username: getUser.username, _id: getUser._id },
       { headers: { "Access-Control-Allow-Origin": "*" } }
     );
   } catch {
@@ -45,6 +45,10 @@ export async function GET() {
   try {
     const db = await initDb();
     const result = await db.collection("fccusers").find({}).toArray();
+    const users = result.map(u => ({
+      username: u.username,
+      _id: u._id
+    }));
     return NextResponse.json(result,
       { status: 200, headers: { "Access-Control-Allow-Origin": "*" } }
     );
