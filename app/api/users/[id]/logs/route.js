@@ -13,67 +13,55 @@ async function initDb() {
   return db;
 }
 
-export async function GET(request, { params }) {
-  const id = params.id;
-  const { searchParams } = new URL(request.url);
-  const from = searchParams.get("from");
-  const to = searchParams.get("to");
-  const limit = parseInt(searchParams.get("limit"));
+export async function POST(request, { params }) {
+  const body = await request.text();
+  const formData = new URLSearchParams(body);
 
-  if (!id) {
+  const description = formData.get("description");
+  const duration = formData.get("duration");
+  const dat = formData.get("date");
+  const id = params.id;
+
+  if (!id || !description || !duration) {
     return NextResponse.json(
-      { error: "Missing user id" },
+      { error: "you need to enter them all" },
       { headers: { "Access-Control-Allow-Origin": "*" } }
     );
+  }
+
+  let date;
+  if (!dat) {
+    date = new Date();  // ✅ save Date object
+  } else {
+    date = new Date(dat); // ✅ save Date object from yyyy-mm-dd
   }
 
   try {
     const db = await initDb();
     const user = await db.collection("fccusers").findOne({ _id: new ObjectId(id) });
-    if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { headers: { "Access-Control-Allow-Origin": "*" } }
-      );
-    }
-
-    // always compute total exercises for this user
-    const totalExercises = await db
-      .collection("fccexercices")
-      .countDocuments({ userId: new ObjectId(id) });
-
-    // build query filter
-    let filter = { userId: new ObjectId(id) };
-    if (from || to) {
-      filter.date = {};
-      if (from) filter.date.$gte = new Date(from);
-      if (to) filter.date.$lte = new Date(to);
-    }
-
-    let query = db.collection("fccexercices").find(filter);
-    if (limit) query = query.limit(limit);
-
-    const exercises = await query.toArray();
-
-    const log = exercises.map(({ description, duration, date }) => ({
+    await db.collection("fccexercices").insertOne({
+      userId: new ObjectId(id),
       description,
-      duration,
-      date: new Date(date).toDateString(), // ensure correct format
-    }));
+      duration: Number(duration),
+      date, // ✅ store Date object, not string
+      username: user.userName,
+    });
 
     return NextResponse.json(
       {
         username: user.userName,
+        description,
+        duration: Number(duration),
+        date: date.toDateString(), // ✅ return string format
         _id: user._id,
-        count: totalExercises, // ✅ always total, not filtered length
-        log,
       },
       { headers: { "Access-Control-Allow-Origin": "*" } }
     );
   } catch (error) {
     return NextResponse.json(
-      { error: "Error getting user logs", errDetails: error.message },
+      { error: "error creating exercise", errDetails: error.message },
       { headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
 }
+
