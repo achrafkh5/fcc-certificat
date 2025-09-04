@@ -13,55 +13,65 @@ async function initDb() {
   return db;
 }
 
-export async function POST(request, { params }) {
-  const body = await request.text();
-  const formData = new URLSearchParams(body);
-
-  const description = formData.get("description");
-  const duration = formData.get("duration");
-  const dat = formData.get("date");
+export async function GET(request, { params }) {
   const id = params.id;
+  const { searchParams } = new URL(request.url);
 
-  if (!id || !description || !duration) {
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+  const limit = parseInt(searchParams.get("limit"));
+
+  if (!id) {
     return NextResponse.json(
-      { error: "you need to enter them all" },
-      { headers: { "Access-Control-Allow-Origin": "*" } }
+      { error: "Missing user ID" },
+      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
     );
-  }
-
-  let date;
-  if (!dat) {
-    date = new Date();  // ✅ save Date object
-  } else {
-    date = new Date(dat); // ✅ save Date object from yyyy-mm-dd
   }
 
   try {
     const db = await initDb();
     const user = await db.collection("fccusers").findOne({ _id: new ObjectId(id) });
-    await db.collection("fccexercices").insertOne({
-      userId: new ObjectId(id),
-      description,
-      duration: Number(duration),
-      date, // ✅ store Date object, not string
-      username: user.userName,
-    });
+    if (!user) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404, headers: { "Access-Control-Allow-Origin": "*" } }
+      );
+    }
+
+    // Build filter
+    let filter = { userId: new ObjectId(id) };
+    if (from || to) {
+      filter.date = {};
+      if (from) filter.date.$gte = new Date(from);
+      if (to) filter.date.$lte = new Date(to);
+    }
+
+    // Query logs
+    let query = db.collection("fccexercices").find(filter);
+    if (limit) query = query.limit(limit);
+
+    const logs = await query.toArray();
+
+    // Format logs for FCC
+    const formattedLogs = logs.map(ex => ({
+      description: ex.description,
+      duration: Number(ex.duration),
+      date: new Date(ex.date).toDateString(),
+    }));
 
     return NextResponse.json(
       {
         username: user.userName,
-        description,
-        duration: Number(duration),
-        date: date.toDateString(), // ✅ return string format
         _id: user._id,
+        count: formattedLogs.length,
+        log: formattedLogs,
       },
       { headers: { "Access-Control-Allow-Origin": "*" } }
     );
   } catch (error) {
     return NextResponse.json(
-      { error: "error creating exercise", errDetails: error.message },
-      { headers: { "Access-Control-Allow-Origin": "*" } }
+      { error: "error getting logs", details: error.message },
+      { status: 500, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
 }
-
