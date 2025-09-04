@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import { MongoClient } from "mongodb";
 
 let client;
@@ -16,26 +17,26 @@ export async function GET(request, { params }) {
   const id = Number(params.shorturl);
 
   if (isNaN(id)) {
-    return new Response(JSON.stringify({ error: "invalid url" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return NextResponse.json(
+      { error: "No short URL found for the given input" },
+      { headers: { "Access-Control-Allow-Origin": "*" } }
+    );
   }
 
   const db = await initDb();
   const urlEntry = await db.collection("urls").findOne({ short_url: id });
 
   if (!urlEntry) {
-    return new Response(JSON.stringify({ error: "No short URL found for the given input" }), {
-      status: 404,
-      headers: { "Content-Type": "application/json" },
-    });
+    return NextResponse.json(
+      { error: "No short URL found for the given input" },
+      { headers: { "Access-Control-Allow-Origin": "*" } }
+    );
   }
 
-  // ✅ pure redirect with no body
-  return new Response(undefined, {
-    headers: {
-      Location: urlEntry.original_url,
-    },
-  });
+  return NextResponse(null, {
+  status: 302,
+  headers: {
+    Location: urlEntry.original_url,
+  },
+});
 }
