@@ -33,9 +33,5 @@ export async function GET(request, { params }) {
     );
   }
 
-  return NextResponse(null, {
-  headers: {
-    Location: urlEntry.original_url,
-  },
-});
+  return NextResponse.redirect(urlEntry.original_url);
 }
