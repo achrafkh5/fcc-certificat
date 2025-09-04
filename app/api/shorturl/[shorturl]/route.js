@@ -34,7 +34,7 @@ export async function GET(request, { params }) {
 
   // ✅ pure redirect with no body
   return new Response(undefined, {
-    status: 302,
+    status: 301,
     headers: {
       Location: urlEntry.original_url,
     },
