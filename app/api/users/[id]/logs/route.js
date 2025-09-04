@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { MongoClient, ObjectId } from "mongodb";
+import { MongoClient,ObjectId } from "mongodb";
 
 let client;
 let db;
@@ -16,64 +16,47 @@ async function initDb() {
 export async function GET(request, { params }) {
   const id = params.id;
   const { searchParams } = new URL(request.url);
-  const from = searchParams.get("from");
-  const to = searchParams.get("to");
-  const limit = parseInt(searchParams.get("limit"));
+const from = searchParams.get("from");
+const to = searchParams.get("to");
+const limit = parseInt(searchParams.get("limit"));
 
-  if (!id) {
+
+
+    if (!id) {
     return NextResponse.json(
-      { error: "Missing user id" },
+      { error: "you need to enter them all" },
       { headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
+  let filter = { userId: new ObjectId(id) };
 
+
+
+  
   try {
-    const db = await initDb();
-    const user = await db.collection("fccusers").findOne({ _id: new ObjectId(id) });
-    if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { headers: { "Access-Control-Allow-Origin": "*" } }
-      );
-    }
-
-    // get total count (for test 10)
-    const totalExercises = await db.collection("fccexercices").countDocuments({
-      userId: new ObjectId(id),
-    });
-
-    // build filter for log
-    let filter = { userId: new ObjectId(id) };
     if (from || to) {
-      filter.date = {};
-      if (from) filter.date.$gte = new Date(from);
-      if (to) filter.date.$lte = new Date(to);
-    }
+    filter.date = {};
+    if (from) filter.date.$gte = new Date(from).toDateString();
+    if (to) filter.date.$lte = new Date(to).toDateString();
 
+    const db = await initDb();
+    const getexrcises = await db.collection("fccexercices").find({ userId:new ObjectId(id) }).toArray();
+    const getUser = await db.collection("fccusers").findOne({ _id: new ObjectId(id) });
+    let exercises = getexrcises.map(({description,duration,date})=>({description,duration,date}));
     let query = db.collection("fccexercices").find(filter);
     if (limit) query = query.limit(limit);
 
-    const exercises = await query.toArray();
-
-    const log = exercises.map(({ description, duration, date }) => ({
-      description,
-      duration,
-      date: new Date(date).toDateString(),
-    }));
+     if(from||to||limit){exercises = await query.toArray();}
 
     return NextResponse.json(
-      {
-        username: user.userName,
-        _id: user._id,
-        count: totalExercises, // ✅ always total, not filtered length
-        log,
-      },
+      { username: getUser.userName,_id: getUser._id, count: exercises.length,log: exercises },
       { headers: { "Access-Control-Allow-Origin": "*" } }
     );
-  } catch (error) {
+  }} catch {
     return NextResponse.json(
-      { error: "Error getting user logs", errDetails: error.message },
+      { error: "error getting user",errDetails: error.message },
       { headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
 }
+
