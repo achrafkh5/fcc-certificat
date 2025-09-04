@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import { MongoClient } from "mongodb";
 
 let client;
@@ -16,33 +17,27 @@ export async function GET(request, { params }) {
   const id = Number(params.shorturl);
 
   if (isNaN(id)) {
-    return new Response(JSON.stringify({ error: "invalid url" }), {
-      status: 400,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": "application/json",
-      },
-    });
+    return NextResponse.json(
+      { error: "No short URL found for the given input" },
+      { headers: { "Access-Control-Allow-Origin": "*" } }
+    );
   }
 
   const db = await initDb();
   const urlEntry = await db.collection("urls").findOne({ short_url: id });
 
   if (!urlEntry) {
-    return new Response(JSON.stringify({ error: "invalid url" }), {
-      status: 404,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": "application/json",
-      },
-    });
+    return NextResponse.json(
+      { error: "No short URL found for the given input" },
+      { headers: { "Access-Control-Allow-Origin": "*" } }
+    );
   }
 
   return new Response(null, {
-    status: 302,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      Location: urlEntry.original_url,
-    },
-  });
+  status: 302,
+  headers: {
+    Location: urlEntry.original_url,
+    "Access-Control-Allow-Origin": "*", 
+  },
+});
 }

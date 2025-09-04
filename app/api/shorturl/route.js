@@ -22,29 +22,20 @@ export async function POST(request) {
   const url = body.get("url");
 
   if (!url) {
-    return NextResponse.json(
-      { error: "invalid url" },
-      { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } }
-    );
+    return NextResponse.json({ error: "invalid url" });
   }
 
   let hostname;
   try {
     hostname = new URL(url).hostname;
   } catch {
-    return NextResponse.json(
-      { error: "invalid url" },
-      { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } }
-    );
+    return NextResponse.json({ error: "invalid url" });
   }
 
   try {
     await dnsLookup(hostname);
   } catch {
-    return NextResponse.json(
-      { error: "invalid url" },
-      { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } }
-    );
+    return NextResponse.json({ error: "invalid url" });
   }
 
   const db = await initDb();
@@ -63,8 +54,5 @@ export async function POST(request) {
     short_url: shortCode,
   });
 
-  return NextResponse.json(
-    { original_url: url, short_url: shortCode },
-    { headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" } }
-  );
+  return NextResponse.json({ original_url: url, short_url: shortCode });
 }
