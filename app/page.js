@@ -1,57 +1,45 @@
 "use client";
 import styles from "./page.module.css";
 import { useState } from "react";
+
 export default function Home() {
-  const [username, setUsername] = useState("");
-  const [id, setId] = useState("");
-  const [description, setDescription] = useState("");
-  const [duration, setDuration] = useState("");
-  const [date, setDate] = useState("");
+  const [fileInfo, setFileInfo] = useState(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFileInfo({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      });
+    }
+  };
 
   return (
     <div className={styles.page}>
       <h1 className={styles.title}>Exercise Tracker</h1>
-      <form className={styles.form} method="POST" action="/api/users">
+      <form
+        className={styles.form}
+        method="POST"
+        action="/api/fileanalyse"
+        encType="multipart/form-data"
+      >
         <input
           className={styles.input}
-          type="text"
-          name="username"
-          placeholder="Enter userName"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          type="file"
+          name="upfile"
+          onChange={handleFileChange}
         />
+        {fileInfo && (
+          <div>
+            <p>Name: {fileInfo.name}</p>
+            <p>Size: {fileInfo.size} bytes</p>
+            <p>Type: {fileInfo.type}</p>
+          </div>
+        )}
         <button className={styles.button} type="submit">
-          submit user
-        </button>
-      </form>
-      <input type="text"placeholder="Enter user ID" value={id} onChange={(e) => setId(e.target.value)} style={{marginTop:"-200px"}}/>
-      <form className={styles.form} style={{display:"flex",flexDirection:"column",gap:"20px",marginTop:"-150px"}} method="POST" action={`/api/users/${id}/exercises`}>
-        <input
-          className={styles.input}
-          type="text"
-          name="description"
-          placeholder="Enter description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-        <input
-          className={styles.input}
-          type="number"
-          name="duration"
-          placeholder="Enter duration"
-          value={duration}
-          onChange={(e) => setDuration(e.target.value)}
-        />
-        <input
-          className={styles.input}
-          type="date"
-          name="date"
-          placeholder="Enter date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
-        <button className={styles.button} type="submit">
-          submit user
+          Submit File
         </button>
       </form>
     </div>
