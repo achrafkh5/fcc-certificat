@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { MongoClient,ObjectId } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 
 let client;
 let db;
@@ -16,59 +16,60 @@ async function initDb() {
 export async function GET(request, { params }) {
   const id = params.id;
   const { searchParams } = new URL(request.url);
-const from = searchParams.get("from");
-const to = searchParams.get("to");
-const limit = parseInt(searchParams.get("limit"));
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+  const limit = parseInt(searchParams.get("limit"));
 
-
-
-    if (!id) {
+  if (!id) {
     return NextResponse.json(
-      { error: "you need to enter them all" },
+      { error: "Missing user id" },
       { headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
-  
+
   try {
-    if(from && to && limit){
-      const db = await initDb();
-      const logs = await db.collection("fccexercices").find({ userId: new ObjectId(id), date: { $gte: new Date(from).toDateString(), $lte: new Date(to).toDateString() } }).limit(limit).toArray();
-      const count = await db.collection("fccexercices").find({ userId: new ObjectId(id), date: { $gte: new Date(from).toDateString(), $lte: new Date(to).toDateString() } }).limit(limit).count();
+    const db = await initDb();
+    const user = await db.collection("fccusers").findOne({ _id: new ObjectId(id) });
+    if (!user) {
       return NextResponse.json(
-        { logs, count },
-        { headers: { "Access-Control-Allow-Origin": "*" } }
-      );
-    } else if(from && to){
-      const db = await initDb();
-      const logs = await db.collection("fccexercices").find({ userId: new ObjectId(id), date: { $gte: new Date(from).toDateString(), $lte: new Date(to).toDateString() } }).toArray();
-      const count = await db.collection("fccexercices").find({ userId: new ObjectId(id), date: { $gte: new Date(from).toDateString(), $lte: new Date(to).toDateString() } }).count();
-      return NextResponse.json(
-        { logs, count },
-        { headers: { "Access-Control-Allow-Origin": "*" } }
-      );
-    } else if(limit){
-      const db = await initDb();
-      const logs = await db.collection("fccexercices").find({ userId: new ObjectId(id) }).limit(limit).toArray();
-      const count = await db.collection("fccexercices").find({ userId: new ObjectId(id) }).limit(limit).count();
-      return NextResponse.json(
-        { logs, count },
+        { error: "User not found" },
         { headers: { "Access-Control-Allow-Origin": "*" } }
       );
     }
-    else{
-        const db = await initDb();
-    const getexrcises = await db.collection("fccexercices").find({ userId:new ObjectId(id) }).toArray();
-    const getUser = await db.collection("fccusers").findOne({ _id: new ObjectId(id) });
-    const exercises = getexrcises.map(({description,duration,date})=>({description,duration,date}));
+
+    // Build filter
+    let filter = { userId: new ObjectId(id) };
+    if (from || to) {
+      filter.date = {};
+      if (from) filter.date.$gte = new Date(from);
+      if (to) filter.date.$lte = new Date(to);
+    }
+
+    // Query with optional limit
+    let query = db.collection("fccexercices").find(filter);
+    if (limit) query = query.limit(limit);
+
+    const exercises = await query.toArray();
+
+    const log = exercises.map(({ description, duration, date }) => ({
+      description,
+      duration,
+      date: new Date(date).toDateString(),
+    }));
+
     return NextResponse.json(
-      { username: getUser.userName,_id: getUser._id, count: exercises.length,log: exercises },
+      {
+        username: user.userName,
+        _id: user._id,
+        count: log.length,
+        log,
+      },
       { headers: { "Access-Control-Allow-Origin": "*" } }
-    );}
-  } catch {
+    );
+  } catch (error) {
     return NextResponse.json(
-      { error: "error getting user",errDetails: error.message },
+      { error: "Error getting user logs", errDetails: error.message },
       { headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
 }
-
