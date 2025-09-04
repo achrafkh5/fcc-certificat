@@ -34,7 +34,6 @@ export async function GET(request, { params }) {
   }
 
   return NextResponse(null, {
-  status: 302,
   headers: {
     Location: urlEntry.original_url,
   },
