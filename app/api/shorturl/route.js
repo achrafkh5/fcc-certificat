@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { MongoClient } from "mongodb";
-import dns from "dns";
-import { promisify } from "util";
+import dns from "dns/promises";
 
 let client;
 let db;
@@ -15,44 +14,59 @@ async function initDb() {
   return db;
 }
 
-const dnsLookup = promisify(dns.lookup);
-
 export async function POST(request) {
-  const body = await request.formData();
-  const url = body.get("url");
+  const body = await request.text();
+  const params = new URLSearchParams(body);
+  const url = params.get("url");
 
   if (!url) {
-    return NextResponse.json({ error: "invalid url" });
+    return NextResponse.json(
+      { error: "invalid url" },
+      { headers: { "Access-Control-Allow-Origin": "*" } }
+    );
   }
 
-  let hostname;
-  try {
-    hostname = new URL(url).hostname;
-  } catch {
-    return NextResponse.json({ error: "invalid url" });
+  if (!/^https?:\/\//i.test(url)) {
+    return NextResponse.json(
+      { error: "invalid url" },
+      { headers: { "Access-Control-Allow-Origin": "*" } }
+    );
   }
 
+  let validUrl;
   try {
-    await dnsLookup(hostname);
+    validUrl = new URL(url);
   } catch {
-    return NextResponse.json({ error: "invalid url" });
+    return NextResponse.json(
+      { error: "invalid url" },
+      { headers: { "Access-Control-Allow-Origin": "*" } }
+    );
+  }
+
+  // Verify hostname exists
+  try {
+    await dns.lookup(validUrl.hostname);
+  } catch {
+    return NextResponse.json(
+      { error: "invalid url" },
+      { headers: { "Access-Control-Allow-Origin": "*" } }
+    );
   }
 
   const db = await initDb();
 
-  const lastEntry = await db
-    .collection("urls")
-    .find()
-    .sort({ short_url: -1 })
-    .limit(1)
-    .toArray();
+  // Get next short_url
+  const count = await db.collection("urls").countDocuments();
+  const shortCode = count + 1;
 
-  const shortCode = lastEntry.length ? lastEntry[0].short_url + 1 : 1;
 
   await db.collection("urls").insertOne({
-    original_url: url,
+    original_url: validUrl.href,
     short_url: shortCode,
   });
 
-  return NextResponse.json({ original_url: url, short_url: shortCode });
+  return NextResponse.json(
+    { original_url: validUrl.href, short_url: shortCode },
+    { headers: { "Access-Control-Allow-Origin": "*" } }
+  );
 }
