@@ -37,7 +37,12 @@ export async function GET(request, { params }) {
       );
     }
 
-    // Build filter
+    // get total count (for test 10)
+    const totalExercises = await db.collection("fccexercices").countDocuments({
+      userId: new ObjectId(id),
+    });
+
+    // build filter for log
     let filter = { userId: new ObjectId(id) };
     if (from || to) {
       filter.date = {};
@@ -45,7 +50,6 @@ export async function GET(request, { params }) {
       if (to) filter.date.$lte = new Date(to);
     }
 
-    // Query with optional limit
     let query = db.collection("fccexercices").find(filter);
     if (limit) query = query.limit(limit);
 
@@ -61,7 +65,7 @@ export async function GET(request, { params }) {
       {
         username: user.userName,
         _id: user._id,
-        count: log.length,
+        count: totalExercises, // ✅ always total, not filtered length
         log,
       },
       { headers: { "Access-Control-Allow-Origin": "*" } }
