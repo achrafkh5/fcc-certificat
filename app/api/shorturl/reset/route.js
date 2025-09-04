@@ -28,3 +28,19 @@ export async function DELETE() {
     );
   }
 }
+
+export async function GET() {
+  try {
+    const db = await initDb();
+    const result = await db.collection("urls").find({}).toArray();
+    return NextResponse.json(
+      { urls: result },
+      { status: 200, headers: { "Access-Control-Allow-Origin": "*" } }
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to clear URLs", details: error.message },
+      { status: 500, headers: { "Access-Control-Allow-Origin": "*" } }
+    );
+  }
+}

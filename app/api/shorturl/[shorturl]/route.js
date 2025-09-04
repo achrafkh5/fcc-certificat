@@ -33,5 +33,10 @@ export async function GET(request, { params }) {
     );
   }
 
-  return NextResponse.redirect(urlEntry.original_url, 302);
+  return new Response(null, {
+  status: 302,
+  headers: {
+    Location: urlEntry.original_url,
+  },
+});
 }
