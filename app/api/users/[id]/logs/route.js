@@ -15,6 +15,11 @@ async function initDb() {
 
 export async function GET(request, { params }) {
   const id = params.id;
+  const { searchParams } = new URL(request.url);
+const from = searchParams.get("from");
+const to = searchParams.get("to");
+const limit = parseInt(searchParams.get("limit"));
+
 
 
     if (!id) {
@@ -25,14 +30,40 @@ export async function GET(request, { params }) {
   }
   
   try {
-    const db = await initDb();
+    if(from && to && limit){
+      const db = await initDb();
+      const logs = await db.collection("fccexercices").find({ userId: new ObjectId(id), date: { $gte: new Date(from).toDateString(), $lte: new Date(to).toDateString() } }).limit(limit).toArray();
+      const count = await db.collection("fccexercices").find({ userId: new ObjectId(id), date: { $gte: new Date(from).toDateString(), $lte: new Date(to).toDateString() } }).limit(limit).count();
+      return NextResponse.json(
+        { logs, count },
+        { headers: { "Access-Control-Allow-Origin": "*" } }
+      );
+    } else if(from && to){
+      const db = await initDb();
+      const logs = await db.collection("fccexercices").find({ userId: new ObjectId(id), date: { $gte: new Date(from).toDateString(), $lte: new Date(to).toDateString() } }).toArray();
+      const count = await db.collection("fccexercices").find({ userId: new ObjectId(id), date: { $gte: new Date(from).toDateString(), $lte: new Date(to).toDateString() } }).count();
+      return NextResponse.json(
+        { logs, count },
+        { headers: { "Access-Control-Allow-Origin": "*" } }
+      );
+    } else if(limit){
+      const db = await initDb();
+      const logs = await db.collection("fccexercices").find({ userId: new ObjectId(id) }).limit(limit).toArray();
+      const count = await db.collection("fccexercices").find({ userId: new ObjectId(id) }).limit(limit).count();
+      return NextResponse.json(
+        { logs, count },
+        { headers: { "Access-Control-Allow-Origin": "*" } }
+      );
+    }
+    else{
+        const db = await initDb();
     const getexrcises = await db.collection("fccexercices").find({ userId:new ObjectId(id) }).toArray();
     const getUser = await db.collection("fccusers").findOne({ _id: new ObjectId(id) });
     const exercises = getexrcises.map(({description,duration,date})=>({description,duration,date}));
     return NextResponse.json(
       { username: getUser.userName,_id: getUser._id, count: exercises.length,log: exercises },
       { headers: { "Access-Control-Allow-Origin": "*" } }
-    );
+    );}
   } catch {
     return NextResponse.json(
       { error: "error getting user",errDetails: error.message },

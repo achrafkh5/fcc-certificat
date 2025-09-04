@@ -16,7 +16,7 @@ async function initDb() {
 export async function DELETE() {
   try {
     const db = await initDb();
-    const result = await db.collection("fccexercices").deleteMany({});
+    const result = await db.collection("fccusers").deleteMany({});
     return NextResponse.json(
       { message: "All URLs deleted", deletedCount: result.deletedCount },
       { status: 200, headers: { "Access-Control-Allow-Origin": "*" } }
