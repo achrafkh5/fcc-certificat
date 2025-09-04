@@ -15,6 +15,11 @@ async function initDb() {
 
 export async function GET(request, { params }) {
   const id = params.id;
+  const { searchParams } = new URL(request.url);
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+  const limit = parseInt(searchParams.get("limit"));
+
 
 
     if (!id) {
@@ -29,8 +34,20 @@ export async function GET(request, { params }) {
     const getexrcises = await db.collection("fccexercices").find({ userId:new ObjectId(id) }).toArray();
     const getUser = await db.collection("fccusers").findOne({ _id: new ObjectId(id) });
     const exercises = getexrcises.map(({description,duration,date})=>({description,duration,date}));
+    let filteredExercises = exercises;
+    if(from){
+      const fromDate = new Date(from);
+      filteredExercises = filteredExercises.filter(exercise => new Date(exercise.date) >= fromDate);
+    } 
+    if(to){
+      const toDate = new Date(to);
+      filteredExercises = filteredExercises.filter(exercise => new Date(exercise.date) <= toDate);
+    }
+    if(limit){
+      filteredExercises = filteredExercises.slice(0, limit);
+    }
     return NextResponse.json(
-      { username: getUser.userName,_id: getUser._id, count: exercises.length,log: exercises },
+      { username: getUser.userName,_id: getUser._id, count: filteredExercises.length,log: filteredExercises },
       { headers: { "Access-Control-Allow-Origin": "*" } }
     );
   } catch {
