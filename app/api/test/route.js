@@ -16,7 +16,7 @@ async function initDb() {
 export async function DELETE() {
   try {
     const db = await initDb();
-    const result = await db.collection("urls").deleteMany({});
+    const result = await db.collection("fccexercices").deleteMany({});
     return NextResponse.json(
       { message: "All URLs deleted", deletedCount: result.deletedCount },
       { status: 200, headers: { "Access-Control-Allow-Origin": "*" } }
@@ -32,9 +32,9 @@ export async function DELETE() {
 export async function GET() {
   try {
     const db = await initDb();
-    const result = await db.collection("urls").find({}).toArray();
+    const result = await db.collection("fccusers").find({}).toArray();
     return NextResponse.json(
-      { urls: result },
+      { users: result },
       { status: 200, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   } catch (error) {
